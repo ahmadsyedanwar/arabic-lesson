@@ -645,7 +645,7 @@ function renderChant(main, verbs) {
   const zoomPronounBn = pronounsBn[chantZoomIdx] || '';
   const zoomOverlay = chantZoomOpen ? `
     <div class="word-zoom-overlay" onclick="closeChantZoom()">
-      <div class="word-zoom-modal" role="dialog" aria-modal="true" aria-labelledby="wordZoomTitle" onclick="event.stopPropagation()" ontouchstart="onZoomTouchStart(event)" ontouchend="onZoomTouchEnd(event)">
+      <div class="word-zoom-modal" role="dialog" aria-modal="true" aria-labelledby="wordZoomTitle" tabindex="-1" onkeydown="onWordZoomKeydown(event)" onclick="event.stopPropagation()" ontouchstart="onZoomTouchStart(event)" ontouchend="onZoomTouchEnd(event)">
         <h2 id="wordZoomTitle" class="sr-only">Verb Form Details</h2>
         <button class="word-zoom-close" onclick="closeChantZoom()" aria-label="close">✕</button>
         <div class="word-zoom-word ar">${zoomWord}</div>
@@ -690,7 +690,14 @@ function renderChant(main, verbs) {
 
 function setChantSection(s) { chantSection = s; chantZoomOpen = false; stopChant(); render(); }
 function chantTap(i) { stopChant(); chantIdx = i; render(); }
-function openChantZoom(i) { stopChant(); chantIdx = i; chantZoomIdx = i; chantZoomOpen = true; render(); }
+function openChantZoom(i) {
+  stopChant();
+  chantIdx = i;
+  chantZoomIdx = i;
+  chantZoomOpen = true;
+  render();
+  setTimeout(() => document.querySelector('.word-zoom-modal')?.focus(), 0);
+}
 function closeChantZoom() { chantZoomOpen = false; render(); }
 function prevChantZoom() {
   const forms = getVerbs()[currentVerbIdx][chantSection];
@@ -710,14 +717,26 @@ function onZoomTouchStart(e) {
   zoomTouch = { id:t.identifier, x:t.clientX };
 }
 function onZoomTouchEnd(e) {
-  const touches = [...(e.changedTouches || [])];
-  const touch = touches.find(t => t.identifier === zoomTouch.id) || touches[0] || null;
+  const touches = [...e.changedTouches];
+  const touch = touches.find(t => t.identifier === zoomTouch.id) || null;
   const endX = touch ? touch.clientX : null;
   if (zoomTouch.x === null || endX === null) return;
   const delta = endX - zoomTouch.x;
   zoomTouch = { id:null, x:null };
   if (delta <= -SWIPE_THRESHOLD_PX) nextChantZoom();
   else if (delta >= SWIPE_THRESHOLD_PX) prevChantZoom();
+}
+function onWordZoomKeydown(e) {
+  if (e.key === 'Escape') { closeChantZoom(); return; }
+  if (e.key !== 'Tab') return;
+  const modal = document.querySelector('.word-zoom-modal');
+  if (!modal) return;
+  const focusables = [...modal.querySelectorAll('button')];
+  if (!focusables.length) return;
+  const first = focusables[0], last = focusables[focusables.length-1];
+  const active = document.activeElement;
+  if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
 }
 
 function toggleChant() {
