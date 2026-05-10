@@ -699,15 +699,16 @@ function openChantZoom(i) {
   setTimeout(() => document.querySelector('.word-zoom-modal')?.focus(), 0);
 }
 function closeChantZoom() { chantZoomOpen = false; render(); }
+function wrapIndex(current, delta, length) { return (current + delta + length) % length; }
 function prevChantZoom() {
   const forms = getVerbs()[currentVerbIdx][chantSection];
-  chantZoomIdx = (chantZoomIdx - 1 + forms.length) % forms.length;
+  chantZoomIdx = wrapIndex(chantZoomIdx, -1, forms.length);
   chantIdx = chantZoomIdx;
   render();
 }
 function nextChantZoom() {
   const forms = getVerbs()[currentVerbIdx][chantSection];
-  chantZoomIdx = (chantZoomIdx + 1) % forms.length;
+  chantZoomIdx = wrapIndex(chantZoomIdx, 1, forms.length);
   chantIdx = chantZoomIdx;
   render();
 }
@@ -717,8 +718,13 @@ function onZoomTouchStart(e) {
   zoomTouch = { id:t.identifier, x:t.clientX };
 }
 function onZoomTouchEnd(e) {
-  const touches = [...e.changedTouches];
-  const touch = touches.find(t => t.identifier === zoomTouch.id) || null;
+  let touch = null;
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === zoomTouch.id) {
+      touch = e.changedTouches[i];
+      break;
+    }
+  }
   const endX = touch ? touch.clientX : null;
   if (zoomTouch.x === null || endX === null) return;
   const delta = endX - zoomTouch.x;
@@ -731,7 +737,7 @@ function onWordZoomKeydown(e) {
   if (e.key !== 'Tab') return;
   const modal = document.querySelector('.word-zoom-modal');
   if (!modal) return;
-  const focusables = [...modal.querySelectorAll('button')];
+  const focusables = [...modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')];
   if (!focusables.length) return;
   const first = focusables[0], last = focusables[focusables.length-1];
   const active = document.activeElement;
