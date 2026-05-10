@@ -118,7 +118,7 @@ main{padding:14px;padding-bottom:80px}
 .chant-form-pronoun{font-family:var(--ar);font-size:0.62rem;direction:rtl;
   color:var(--muted);display:block;margin-bottom:2px}
 .chant-form.active .chant-form-pronoun,.chant-form.active .chant-form-bn{color:rgba(255,255,255,.75)}
-.chant-form-word{font-family:var(--ar);font-size:1.5rem;font-weight:700;direction:rtl;display:block}
+.chant-form-word{font-family:var(--ar);font-size:3rem;font-weight:700;direction:rtl;display:block;line-height:1.2}
 .chant-form-bn{font-family:var(--bn);font-size:0.58rem;color:var(--muted);display:block;margin-top:1px}
 .chant-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .chant-btn{padding:9px 16px;border-radius:10px;border:2px solid var(--border);
@@ -134,6 +134,14 @@ main{padding:14px;padding-bottom:80px}
 .chant-sec-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--border);
   background:#f5f5f5;cursor:pointer;transition:all .2s;font-size:0.9rem}
 .chant-sec-btn.active-sec{background:var(--green);border-color:var(--green);color:#fff}
+.word-zoom-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.word-zoom-modal{width:min(420px,100%);background:#fff;border-radius:18px;padding:20px 16px 14px;position:relative;text-align:center;touch-action:pan-y}
+.word-zoom-close{position:absolute;top:8px;right:10px;border:none;background:none;font-size:1.4rem;line-height:1;cursor:pointer;color:#777}
+.word-zoom-word{font-family:var(--ar);font-size:6rem;font-weight:700;line-height:1.15;direction:rtl;color:var(--green);margin-top:8px}
+.word-zoom-pronoun{font-family:var(--bn);font-size:.95rem;color:var(--muted);margin-top:8px}
+.word-zoom-nav{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.word-zoom-nav-btn{border:2px solid var(--border);background:#fff;border-radius:10px;padding:8px 14px;font-family:var(--bn);font-size:.85rem;cursor:pointer}
+.word-zoom-swipe-hint{font-family:var(--bn);font-size:.72rem;color:var(--muted);margin-top:8px}
 
 /* ── QUIZ ── */
 .quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -321,6 +329,7 @@ let cardFlipped    = false;
 // chant
 let chantActive = false, chantIdx = -1, chantTimer = null, chantSpeed = 900;
 let chantSection = 'madi';
+let chantZoomOpen = false, chantZoomIdx = 0, zoomTouchStartX = null;
 
 // quiz
 let quizIdx = 0, quizScore = 0, quizTotal = 10;
@@ -449,13 +458,13 @@ function renderDayTabs() {
 }
 
 function setDay(d) {
-  currentDay = d; currentVerbIdx = 0; cardFlipped = false;
+  currentDay = d; currentVerbIdx = 0; cardFlipped = false; chantZoomOpen = false;
   stopChant(); startQuiz(); renderDayTabs(); render();
 }
 
 // ── mode ──
 function setMode(m) {
-  currentMode = m; currentVerbIdx = 0; cardFlipped = false;
+  currentMode = m; currentVerbIdx = 0; cardFlipped = false; chantZoomOpen = false;
   chantSection = 'madi';
   stopChant();
   document.querySelectorAll('.mode-btn').forEach((b,i) => {
@@ -571,10 +580,10 @@ function flipCard() {
   if (h) h.textContent = cardFlipped ? '👆 সামনের দিক দেখতে ট্যাপ করুন' : '👆 ২০টি রূপ দেখতে ট্যাপ করুন';
 }
 
-function prevVerb() { if (currentVerbIdx > 0) { currentVerbIdx--; cardFlipped=false; render(); } }
+function prevVerb() { if (currentVerbIdx > 0) { currentVerbIdx--; cardFlipped=false; chantZoomOpen=false; render(); } }
 function nextVerb() {
   const v = getVerbs();
-  if (currentVerbIdx < v.length-1) { currentVerbIdx++; cardFlipped=false; render(); }
+  if (currentVerbIdx < v.length-1) { currentVerbIdx++; cardFlipped=false; chantZoomOpen=false; render(); }
 }
 
 function selfGrade(knew) {
@@ -621,10 +630,25 @@ function renderChant(main, verbs) {
   const pronounsBn = PRONOUNS_BN[sec];
   const cols = (sec==='amr'||sec==='nahi') ? forms.length : 3;
   const formCards = forms.map((form,i) => `
-    <div class="chant-form${chantIdx===i?' active':chantIdx>i?' done':''}" onclick="chantTap(${i})">
+    <div class="chant-form${chantIdx===i?' active':chantIdx>i?' done':''}" onclick="openChantZoom(${i})">
       <span class="chant-form-word ar">${form}</span>
       <span class="chant-form-bn">${pronounsBn[i]||''}</span>
     </div>`).join('');
+  const zoomWord = forms[chantZoomIdx] || '';
+  const zoomPronounBn = pronounsBn[chantZoomIdx] || '';
+  const zoomOverlay = chantZoomOpen ? `
+    <div class="word-zoom-overlay" onclick="closeChantZoom()">
+      <div class="word-zoom-modal" onclick="event.stopPropagation()" ontouchstart="onZoomTouchStart(event)" ontouchend="onZoomTouchEnd(event)">
+        <button class="word-zoom-close" onclick="closeChantZoom()" aria-label="close">✕</button>
+        <div class="word-zoom-word ar">${zoomWord}</div>
+        <div class="word-zoom-pronoun bn">${zoomPronounBn}</div>
+        <div class="word-zoom-nav">
+          <button class="word-zoom-nav-btn" onclick="prevChantZoom()">← আগে</button>
+          <button class="word-zoom-nav-btn" onclick="nextChantZoom()">পরে →</button>
+        </div>
+        <div class="word-zoom-swipe-hint">⬅️ ডানে/বামে সোয়াইপ করুন</div>
+      </div>
+    </div>` : '';
 
   main.innerHTML = `
     <div class="progress">
@@ -652,11 +676,35 @@ function renderChant(main, verbs) {
       <button class="speed-btn" onclick="setSpeed(1300)">ধীর</button>
       <button class="speed-btn" onclick="setSpeed(850)">স্বাভাবিক</button>
       <button class="speed-btn" onclick="setSpeed(500)">দ্রুত</button>
-    </div>`;
+    </div>
+    ${zoomOverlay}`;
 }
 
-function setChantSection(s) { chantSection = s; stopChant(); render(); }
+function setChantSection(s) { chantSection = s; chantZoomOpen = false; stopChant(); render(); }
 function chantTap(i) { stopChant(); chantIdx = i; render(); }
+function openChantZoom(i) { stopChant(); chantIdx = i; chantZoomIdx = i; chantZoomOpen = true; render(); }
+function closeChantZoom() { chantZoomOpen = false; render(); }
+function prevChantZoom() {
+  const forms = getVerbs()[currentVerbIdx][chantSection];
+  chantZoomIdx = (chantZoomIdx - 1 + forms.length) % forms.length;
+  chantIdx = chantZoomIdx;
+  render();
+}
+function nextChantZoom() {
+  const forms = getVerbs()[currentVerbIdx][chantSection];
+  chantZoomIdx = (chantZoomIdx + 1) % forms.length;
+  chantIdx = chantZoomIdx;
+  render();
+}
+function onZoomTouchStart(e) { zoomTouchStartX = e.changedTouches?.[0]?.clientX ?? null; }
+function onZoomTouchEnd(e) {
+  const endX = e.changedTouches?.[0]?.clientX ?? null;
+  if (zoomTouchStartX == null || endX == null) return;
+  const delta = endX - zoomTouchStartX;
+  zoomTouchStartX = null;
+  if (delta <= -40) nextChantZoom();
+  else if (delta >= 40) prevChantZoom();
+}
 
 function toggleChant() {
   if (chantActive) { stopChant(); render(); return; }
