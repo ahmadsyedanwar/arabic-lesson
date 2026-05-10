@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>আরবি ক্রিয়া অধ্যয়ন</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --green:#2d6a4f;--green-light:#52b788;--green-pale:#d8f3dc;
+  --bg:#f0f7f4;--card:#fff;--text:#1a1a1a;--muted:#6b6b6b;
+  --border:#e2e2e2;--radius:14px;
+  --ar:'Noto Naskh Arabic','Geeza Pro','Tahoma',sans-serif;
+  --bn:'Hind Siliguri','SolaimanLipi','Vrinda',sans-serif;
+  --correct:#1b5e20;--wrong:#b71c1c;
+}
+body{
+  font-family:var(--bn),sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden
+}
+.ar{font-family:var(--ar);direction:rtl;unicode-bidi:embed}
+.bn{font-family:var(--bn)}
+
+/* ── HEADER ── */
+.header{background:var(--green);color:#fff;padding:14px 16px 10px;text-align:center}
+.header-title{font-family:var(--ar);font-size:1.5rem;font-weight:700;direction:rtl}
+.header-sub{font-family:var(--bn);font-size:0.78rem;opacity:.8;margin-top:2px}
+
+/* ── DAY TABS ── */
+.day-tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);
+  overflow-x:auto;-webkit-overflow-scrolling:touch}
+.day-tabs::-webkit-scrollbar{display:none}
+.day-tab{flex-shrink:0;padding:10px 14px;border:none;background:none;cursor:pointer;
+  font-family:var(--bn);font-size:0.82rem;color:var(--muted);
+  border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.day-tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:700}
+
+/* ── MODE TABS ── */
+.mode-tabs{display:flex;padding:8px 10px;gap:6px;background:#fff;border-bottom:1px solid var(--border)}
+.mode-btn{flex:1;padding:8px 2px;border-radius:20px;border:2px solid var(--border);
+  background:none;cursor:pointer;font-family:var(--bn);font-size:0.78rem;font-weight:600;
+  color:var(--muted);transition:all .2s;white-space:nowrap}
+.mode-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ── MAIN ── */
+main{padding:14px;padding-bottom:80px}
+
+/* ── PROGRESS ── */
+.progress{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;font-size:0.8rem;color:var(--muted)}
+.progress-dots{display:flex;gap:5px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:.2s}
+.dot.done{background:var(--green-light)}.dot.current{background:var(--green);transform:scale(1.2)}
+
+/* ── FLASHCARD ── */
+.card-scene{perspective:1200px;width:100%;height:290px;margin-bottom:14px;cursor:pointer}
+.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1)}
+.card-inner.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;
+  border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.card-front{background:var(--green);color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px}
+.card-root{font-family:var(--ar);font-size:3.4rem;font-weight:700;direction:rtl;line-height:1}
+.card-harakaat-pair{direction:rtl;display:flex;align-items:baseline;justify-content:center;
+  gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.card-madi-form{font-family:var(--ar);font-size:2.6rem;font-weight:700;line-height:1.3}
+.card-mudari-form{font-family:var(--ar);font-size:2.6rem;font-weight:700;line-height:1.3;opacity:.85}
+.card-harakaat-sep{font-size:1.4rem;opacity:.5;font-family:var(--ar)}
+.card-root-small{font-family:var(--ar);font-size:1rem;opacity:.55;direction:rtl;margin-bottom:2px}
+.card-masdar-ar{font-family:var(--ar);font-size:1.1rem;direction:rtl;opacity:.9}
+.card-meaning{font-family:var(--bn);font-size:1.1rem;opacity:.9;font-weight:600}
+.card-hint{font-family:var(--bn);font-size:0.72rem;opacity:.55;margin-top:4px}
+.card-back{background:var(--card);transform:rotateY(180deg);overflow-y:auto;padding:14px}
+.card-back-title{font-family:var(--ar);font-size:1.05rem;font-weight:700;direction:rtl;
+  color:var(--green);text-align:center;margin-bottom:10px}
+.conj-section{margin-bottom:8px}
+.conj-label{font-family:var(--bn);font-size:0.68rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.conj-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.conj-row{display:flex;justify-content:space-between;align-items:center;
+  background:#f7f7f7;border-radius:7px;padding:5px 8px;gap:4px}
+.conj-pronoun{font-family:var(--ar);font-size:0.72rem;direction:rtl;color:var(--muted);flex-shrink:0}
+.conj-form{font-family:var(--ar);font-size:1rem;direction:rtl;font-weight:700}
+.conj-masdar-row{background:var(--green-pale);border-radius:8px;padding:6px 10px;
+  display:flex;justify-content:space-between;align-items:center}
+.note-box{background:#fff8e1;border-radius:8px;padding:7px 10px;margin-top:6px;
+  font-family:var(--bn);font-size:0.72rem;color:#7c5800;line-height:1.5;
+  border-right:3px solid #f59f00;direction:rtl;text-align:right}
+
+/* ── NAV BUTTONS ── */
+.nav-buttons{display:flex;gap:10px;justify-content:center}
+.nav-btn{background:#fff;border:2px solid var(--border);border-radius:12px;
+  padding:11px 26px;font-size:0.95rem;cursor:pointer;font-weight:600;
+  font-family:var(--bn);transition:all .15s;color:var(--text)}
+.nav-btn:active{transform:scale(.96)}
+.nav-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.nav-btn:disabled{opacity:.35;cursor:default}
+.flip-hint{text-align:center;font-size:0.73rem;color:var(--muted);margin-bottom:8px;
+  font-family:var(--bn)}
+
+/* ── CHANT ── */
+.chant-card{background:var(--card);border-radius:var(--radius);
+  box-shadow:0 4px 20px rgba(0,0,0,.08);padding:18px;margin-bottom:14px}
+.chant-root{font-family:var(--ar);font-size:2.8rem;font-weight:700;direction:rtl;
+  color:var(--green);text-align:center;margin-bottom:2px}
+.chant-meaning{text-align:center;font-family:var(--bn);font-size:0.95rem;color:var(--muted);margin-bottom:14px}
+.chant-label{font-family:var(--bn);font-size:0.68rem;font-weight:700;color:var(--muted);
+  text-align:center;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.chant-forms{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px;direction:rtl}
+.chant-form{background:#f5f5f5;border-radius:10px;padding:9px 4px;
+  text-align:center;transition:all .3s;cursor:pointer}
+.chant-form.active{background:var(--green);color:#fff;transform:scale(1.06)}
+.chant-form.done{background:var(--green-pale)}
+.chant-form-pronoun{font-family:var(--ar);font-size:0.62rem;direction:rtl;
+  color:var(--muted);display:block;margin-bottom:2px}
+.chant-form.active .chant-form-pronoun,.chant-form.active .chant-form-bn{color:rgba(255,255,255,.75)}
+.chant-form-word{font-family:var(--ar);font-size:1.5rem;font-weight:700;direction:rtl;display:block}
+.chant-form-bn{font-family:var(--bn);font-size:0.58rem;color:var(--muted);display:block;margin-top:1px}
+.chant-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.chant-btn{padding:9px 16px;border-radius:10px;border:2px solid var(--border);
+  background:#fff;cursor:pointer;font-weight:600;font-family:var(--bn);font-size:0.82rem;
+  transition:all .15s}
+.chant-btn.active-btn{background:var(--green);color:#fff;border-color:var(--green)}
+.chant-btn:active{transform:scale(.96)}
+.speed-row{display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--muted);
+  margin-top:8px;justify-content:center;font-family:var(--bn)}
+.speed-btn{padding:5px 10px;border-radius:8px;border:1px solid var(--border);
+  background:#fff;cursor:pointer;font-family:var(--bn);font-size:0.72rem;transition:.15s}
+.chant-sec-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.chant-sec-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--border);
+  background:#f5f5f5;cursor:pointer;transition:all .2s;font-size:0.9rem}
+.chant-sec-btn.active-sec{background:var(--green);border-color:var(--green);color:#fff}
+
+/* ── QUIZ ── */
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.quiz-score{font-weight:700;color:var(--green);font-size:.95rem;font-family:var(--bn)}
+.quiz-qnum{font-size:.78rem;color:var(--muted);font-family:var(--bn)}
+.quiz-progress-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:14px}
+.quiz-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.quiz-card{background:var(--card);border-radius:var(--radius);
+  box-shadow:0 4px 20px rgba(0,0,0,.08);padding:18px;margin-bottom:14px}
+.quiz-verb{font-family:var(--ar);font-size:2.6rem;font-weight:700;direction:rtl;
+  color:var(--green);text-align:center}
+.quiz-verb-bn{text-align:center;font-family:var(--bn);font-size:0.85rem;color:var(--muted);margin-bottom:10px}
+.quiz-divider{height:1px;background:var(--border);margin:10px 0}
+.quiz-q-label{font-family:var(--bn);font-size:0.7rem;color:var(--muted);
+  text-align:center;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.quiz-cat{text-align:center;font-family:var(--ar);font-size:1rem;color:var(--text);font-weight:600;direction:rtl}
+.quiz-pronoun{font-family:var(--bn);font-size:2rem;font-weight:700;
+  color:var(--text);text-align:center;margin-top:4px}
+.quiz-pronoun-ar{font-family:var(--ar);font-size:1rem;direction:rtl;
+  color:var(--muted);text-align:center;margin-top:2px;margin-bottom:2px}
+.quiz-options{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:12px}
+.option-btn{background:var(--card);border:2px solid var(--border);border-radius:12px;
+  padding:14px 10px;font-family:var(--ar);font-size:1.6rem;direction:rtl;
+  text-align:center;cursor:pointer;transition:all .2s;font-weight:700;
+  min-height:58px;display:flex;align-items:center;justify-content:center}
+.option-btn:active:not(:disabled){transform:scale(.97)}
+.option-btn.correct{background:var(--green-pale);border-color:var(--correct);color:var(--correct)}
+.option-btn.wrong{background:#ffebee;border-color:var(--wrong);color:var(--wrong)}
+.option-btn:disabled{cursor:default}
+.quiz-feedback{text-align:center;font-family:var(--bn);font-size:0.88rem;
+  font-weight:700;min-height:22px;margin-bottom:6px}
+.quiz-feedback.correct{color:var(--correct)}.quiz-feedback.wrong{color:var(--wrong)}
+
+/* ── হরকত MODE ── */
+.hk-card-scene{perspective:1200px;width:100%;height:310px;margin-bottom:14px;cursor:pointer}
+.hk-card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1)}
+.hk-card-inner.flipped{transform:rotateY(180deg)}
+.hk-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;
+  border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.hk-front{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:24px;color:#fff}
+.hk-symbol-wrap{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center}
+.hk-symbol{font-family:var(--ar);font-size:3.8rem;font-weight:700;direction:rtl}
+.hk-name-bn{font-family:var(--bn);font-size:1.3rem;font-weight:700}
+.hk-sound-badge{background:rgba(255,255,255,.2);border-radius:20px;
+  padding:4px 14px;font-size:1rem;font-family:var(--bn);font-weight:700}
+.hk-front-hint{font-family:var(--bn);font-size:0.7rem;opacity:.55;margin-top:4px}
+.hk-back{background:var(--card);transform:rotateY(180deg);padding:18px;
+  display:flex;flex-direction:column;gap:10px}
+.hk-back-header{display:flex;align-items:center;gap:10px}
+.hk-back-symbol-sm{font-family:var(--ar);font-size:2.2rem;font-weight:700;direction:rtl}
+.hk-back-names{display:flex;flex-direction:column}
+.hk-back-name-ar{font-family:var(--ar);font-size:1.1rem;font-weight:700;direction:rtl;color:var(--green)}
+.hk-back-name-bn{font-family:var(--bn);font-size:0.8rem;color:var(--muted)}
+.hk-desc{font-family:var(--bn);font-size:0.88rem;color:var(--text);line-height:1.6;
+  background:#f7f7f7;border-radius:10px;padding:10px 12px}
+.hk-example-label{font-family:var(--bn);font-size:0.68rem;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.hk-example-box{background:var(--green-pale);border-radius:10px;padding:10px 14px;
+  display:flex;flex-direction:column;gap:4px}
+.hk-example-ar{font-family:var(--ar);font-size:1.5rem;font-weight:700;direction:rtl;
+  color:var(--green);text-align:right}
+.hk-example-bn{font-family:var(--bn);font-size:0.82rem;color:var(--muted);text-align:left}
+.hk-nav-dots{display:flex;gap:6px;justify-content:center;margin-bottom:4px}
+.hk-dot{width:9px;height:9px;border-radius:50%;transition:.2s;border:2px solid transparent}
+.hk-dot.active{transform:scale(1.2)}
+
+/* ── RESULT ── */
+.result-screen{text-align:center;padding:36px 16px}
+.result-emoji{font-size:4rem;margin-bottom:10px}
+.result-score{font-size:2.5rem;font-weight:700;color:var(--green);font-family:var(--bn)}
+.result-pct{font-size:1.2rem;color:var(--muted);font-family:var(--bn);margin-bottom:6px}
+.result-msg{font-size:.95rem;color:var(--muted);font-family:var(--bn);margin-bottom:24px}
+.result-btn{background:var(--green);color:#fff;border:none;border-radius:12px;
+  padding:14px 32px;font-family:var(--bn);font-size:1rem;font-weight:700;cursor:pointer}
+.result-btn:active{transform:scale(.97)}
+
+/* ── EMPTY / LOADING ── */
+.empty{text-align:center;padding:48px 16px;color:var(--muted);font-family:var(--bn);line-height:1.8}
+.empty code{display:block;margin-top:8px;background:#f0f0f0;padding:8px 12px;
+  border-radius:8px;font-size:0.85rem;direction:ltr;text-align:left}
+
+/* ── PROGRESS TRACKING ── */
+.header-top{display:flex;justify-content:space-between;align-items:flex-start}
+.streak-badge{font-size:0.82rem;font-family:var(--bn);background:rgba(255,255,255,.18);
+  border-radius:10px;padding:2px 8px;white-space:nowrap}
+.mastery-pct{font-family:var(--bn);font-size:0.72rem;opacity:.8;margin-top:3px;text-align:center}
+.day-mastery{display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-left:4px;vertical-align:middle;flex-shrink:0}
+.mastery-badge{display:inline-flex;align-items:center;gap:3px;border-radius:10px;
+  padding:2px 7px;font-size:0.68rem;font-family:var(--bn);font-weight:700}
+.mastery-badge.new{background:#ffebee;color:#c62828}
+.mastery-badge.learning{background:#fff8e1;color:#e65100}
+.mastery-badge.mastered{background:var(--green-pale);color:#1b5e20}
+.self-grade-row{display:flex;gap:10px;margin-top:10px}
+.sg-btn{flex:1;padding:13px;border-radius:12px;border:none;font-family:var(--bn);
+  font-size:0.92rem;font-weight:700;cursor:pointer;transition:.15s}
+.sg-btn:active{transform:scale(.97)}
+.sg-btn.knew{background:var(--green-pale);color:#1b5e20;border:2px solid #95d5b2}
+.sg-btn.didnt{background:#ffebee;color:#c62828;border:2px solid #ffcdd2}
+
+/* PROGRESS SCREEN */
+.prog-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.prog-stat{background:var(--card);border-radius:12px;padding:12px 6px;text-align:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.prog-stat-val{font-size:1.6rem;font-weight:700;color:var(--green);font-family:var(--bn)}
+.prog-stat-lbl{font-size:0.62rem;color:var(--muted);font-family:var(--bn);margin-top:2px}
+.prog-section-title{font-family:var(--bn);font-size:0.75rem;font-weight:700;color:var(--muted);
+  margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px}
+.prog-verb-list{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.prog-verb-row{background:var(--card);border-radius:10px;padding:9px 12px;
+  display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.prog-mastery-icon{font-size:1.1rem;flex-shrink:0}
+.prog-verb-root{font-family:var(--ar);font-size:1.25rem;font-weight:700;direction:rtl;
+  min-width:56px;text-align:right;flex-shrink:0}
+.prog-verb-info{flex:1;min-width:0}
+.prog-verb-meaning{font-family:var(--bn);font-size:0.78rem;color:var(--muted)}
+.prog-verb-stats{font-family:var(--bn);font-size:0.7rem;margin-top:2px}
+.stat-c{color:var(--correct);font-weight:700}
+.stat-w{color:var(--wrong);font-weight:700}
+.prog-last{color:var(--muted);font-size:0.65rem}
+.reset-btn{width:100%;padding:12px;background:#ffebee;color:#c62828;
+  border:2px solid #ffcdd2;border-radius:12px;font-family:var(--bn);
+  font-size:0.9rem;font-weight:700;cursor:pointer}
+.reset-btn:active{transform:scale(.97)}
+
+/* ── BAB PATTERN BADGE ── */
+.bab-pill{display:inline-flex;align-items:center;gap:6px;border-radius:20px;
+  padding:4px 12px;margin-top:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35)}
+.bab-label{font-family:var(--bn);font-size:0.65rem;opacity:.8;letter-spacing:.3px;text-transform:uppercase}
+.bab-pattern{font-family:var(--ar);font-size:1.1rem;font-weight:700;direction:rtl}
+.bab-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── HARAKAT QUICK GRID ── */
+.hk-ref-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.hk-ref-btn{border:2px solid transparent;border-radius:10px;padding:8px 4px;
+  background:#fff;cursor:pointer;text-align:center;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.hk-ref-btn.active{transform:scale(1.06);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.hk-ref-sym{font-family:var(--ar);font-size:1.6rem;font-weight:700;direction:rtl;display:block;line-height:1.2}
+.hk-ref-name{font-family:var(--bn);font-size:0.58rem;display:block;margin-top:2px;color:#555}
+.hk-ref-sound{font-family:var(--bn);font-size:0.65rem;font-weight:700;display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">دراسة الأفعال</div>
+    <div id="streakBadge" class="streak-badge"></div>
+  </div>
+  <div class="mastery-pct" id="masteryPct">আরবি ক্রিয়া অধ্যয়ন</div>
+</div>
+
+<div class="day-tabs" id="dayTabs"></div>
+<div class="mode-tabs">
+  <button class="mode-btn active" onclick="setMode('flashcard')">ফ্ল্যাশকার্ড</button>
+  <button class="mode-btn" onclick="setMode('chant')">আবৃত্তি</button>
+  <button class="mode-btn" onclick="setMode('quiz')">কুইজ</button>
+  <button class="mode-btn" onclick="setMode('progress')">অগ্রগতি</button>
+</div>
+
+<main id="main"></main>
+
+<script>
+
+// ── globals ──
+let VERBS = [], PRONOUNS = {};
+
+// bab pattern → color mapping (fatha=orange, kasra=blue, damma=green, mixed)
+const BAB_COLORS = {
+  aa: '#e65100', // fatha/fatha → orange
+  ai: '#8d3b00', // fatha/kasra → brown-orange
+  au: '#1b5e20', // fatha/damma → green
+  ia: '#1565c0', // kasra/fatha → blue
+};
+
+// ── app state ──
+let currentDay  = 1;
+let currentMode = 'flashcard';
+let currentVerbIdx = 0;
+let cardFlipped    = false;
+
+// chant
+let chantActive = false, chantIdx = -1, chantTimer = null, chantSpeed = 900;
+let chantSection = 'madi';
+
+// quiz
+let quizIdx = 0, quizScore = 0, quizTotal = 10;
+let quizQ = null, quizAnswered = false;
+
+// ── load data from verbs.json ──
+async function init() {
+  const main = document.getElementById('main');
+  main.innerHTML = '<div class="empty">লোড হচ্ছে…</div>';
+  try {
+    const data = await fetch('verbs.json').then(r => r.json());
+    VERBS    = data.verbs;
+    PRONOUNS = data.pronouns;
+  } catch(e) {
+    main.innerHTML = '<div class="empty">❌ verbs.json লোড হয়নি।</div>';
+    return;
+  }
+  loadProgress();
+  updateHeaderStats();
+  renderDayTabs();
+  startQuiz();
+  render();
+}
+
+// ── helpers ──
+function getVerbs() {
+  return currentDay === 0 ? VERBS : VERBS.filter(v => v.day === currentDay);
+}
+function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [b[i],b[j]] = [b[j],b[i]];
+  }
+  return b;
+}
+
+// ── PROGRESS TRACKING ──
+const PROGRESS_KEY = 'arabic_study_progress';
+let progress = { streak:{ lastDate:'', count:0 }, verbs:{} };
+
+function loadProgress() {
+  try {
+    const saved = localStorage.getItem(PROGRESS_KEY);
+    if (saved) progress = JSON.parse(saved);
+  } catch(e) {}
+  // invalidate streak if last study was 2+ days ago
+  if (progress.streak.lastDate) {
+    const diff = Math.round((new Date(today()) - new Date(progress.streak.lastDate)) / 86400000);
+    if (diff > 1) progress.streak.count = 0;
+  }
+}
+
+function saveProgress() {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch(e) {}
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+function markStudiedToday() {
+  const t = today();
+  const s = progress.streak;
+  if (s.lastDate === t) return;
+  const diff = s.lastDate
+    ? Math.round((new Date(t) - new Date(s.lastDate)) / 86400000)
+    : 999;
+  s.count = diff === 1 ? s.count + 1 : 1;
+  s.lastDate = t;
+  saveProgress();
+  updateHeaderStats();
+}
+
+function getMastery(root) {
+  const v = progress.verbs[root];
+  if (!v || v.correct + v.wrong === 0) return 'new';
+  if (v.correct >= 3 && v.wrong / (v.correct + v.wrong) < 0.3) return 'mastered';
+  if (v.correct >= 1) return 'learning';
+  return 'new';
+}
+
+function masteryIcon(root) {
+  return { mastered:'🟢', learning:'🟡', new:'🔴' }[getMastery(root)];
+}
+
+function masteryLabel(root) {
+  return { mastered:'আয়ত্ত', learning:'শেখা হচ্ছে', new:'নতুন' }[getMastery(root)];
+}
+
+function recordAnswer(root, isCorrect) {
+  if (!progress.verbs[root]) progress.verbs[root] = { correct:0, wrong:0, lastSeen:'' };
+  if (isCorrect) progress.verbs[root].correct++;
+  else           progress.verbs[root].wrong++;
+  progress.verbs[root].lastSeen = today();
+  markStudiedToday();
+  saveProgress();
+}
+
+function updateHeaderStats() {
+  if (!VERBS.length) return;
+  const mastered = VERBS.filter(v => getMastery(v.root) === 'mastered').length;
+  const s = progress.streak;
+  const sb = document.getElementById('streakBadge');
+  const mp = document.getElementById('masteryPct');
+  if (sb) sb.textContent = s.count > 0 ? `🔥 ${s.count} দিন` : '';
+  if (mp) mp.textContent = `আরবি ক্রিয়া · ${mastered}/${VERBS.length} আয়ত্ত`;
+}
+
+// ── day tabs ──
+function renderDayTabs() {
+  const tabs = document.getElementById('dayTabs');
+  const days = [
+    {label:'সব দিন',val:0},{label:'দিন ১',val:1},
+    {label:'দিন ২',val:2},{label:'দিন ৩',val:3},{label:'দিন ৪',val:4}
+  ];
+  tabs.innerHTML = days.map(d => {
+    let dot = '';
+    if (d.val > 0 && VERBS.length) {
+      const dv = VERBS.filter(v => v.day === d.val);
+      const mc = dv.filter(v => getMastery(v.root) === 'mastered').length;
+      const lc = dv.filter(v => getMastery(v.root) === 'learning').length;
+      const col = mc === dv.length ? '#52b788' : (mc+lc) > 0 ? '#ffd166' : '#ddd';
+      dot = `<span class="day-mastery" style="background:${col}"></span>`;
+    }
+    return `<button class="day-tab${currentDay===d.val?' active':''}" onclick="setDay(${d.val})">${dot}${d.label}</button>`;
+  }).join('');
+}
+
+function setDay(d) {
+  currentDay = d; currentVerbIdx = 0; cardFlipped = false;
+  stopChant(); startQuiz(); renderDayTabs(); render();
+}
+
+// ── mode ──
+function setMode(m) {
+  currentMode = m; currentVerbIdx = 0; cardFlipped = false;
+  chantSection = 'madi';
+  stopChant();
+  document.querySelectorAll('.mode-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['flashcard','chant','quiz','progress'][i] === m);
+  });
+  if (m === 'quiz') startQuiz();
+  render();
+}
+
+// ── render dispatcher ──
+function render() {
+  const main = document.getElementById('main');
+  if (!VERBS.length) return;
+  const verbs = getVerbs();
+  if (currentMode === 'flashcard')       renderFlashcard(main, verbs);
+  else if (currentMode === 'chant')      renderChant(main, verbs);
+  else if (currentMode === 'quiz')       renderQuiz(main, verbs);
+  else if (currentMode === 'progress')   renderProgress(main);
+}
+
+// ── FLASHCARD ──
+const SECTION_LABELS = {
+  madi:   'ماضى — অতীত কাল',
+  mudari: 'مضارع — বর্তমান কাল',
+  amr:    'أمر — আদেশ',
+  nahi:   'نهي — নিষেধ'
+};
+
+function renderFlashcard(main, verbs) {
+  if (!verbs.length) { main.innerHTML = '<div class="empty">এই দিনে কোনো ক্রিয়া নেই।</div>'; return; }
+  const v  = verbs[currentVerbIdx];
+  const m  = getMastery(v.root);
+  const vp = progress.verbs[v.root];
+  const statsStr = vp ? ` · ✓${vp.correct} ✗${vp.wrong}` : '';
+  const dots = verbs.map((_,i) =>
+    `<span class="dot${i===currentVerbIdx?' current':i<currentVerbIdx?' done':''}"></span>`
+  ).join('');
+  const selfGrade = cardFlipped ? `
+    <div class="self-grade-row">
+      <button class="sg-btn knew" onclick="selfGrade(true)">✓ জানতাম</button>
+      <button class="sg-btn didnt" onclick="selfGrade(false)">✗ জানতাম না</button>
+    </div>` : '';
+  main.innerHTML = `
+    <div class="progress">
+      <span>${currentVerbIdx+1} / ${verbs.length}</span>
+      <div class="progress-dots">${dots}</div>
+      <span class="mastery-badge ${m}">${masteryIcon(v.root)} ${masteryLabel(v.root)}${statsStr}</span>
+    </div>
+    <p class="flip-hint">${cardFlipped?'👆 সামনের দিক দেখতে ট্যাপ করুন':'👆 ২০টি রূপ দেখতে ট্যাপ করুন'}</p>
+    <div class="card-scene" onclick="flipCard()">
+      <div class="card-inner${cardFlipped?' flipped':''}">
+        <div class="card-face card-front">
+          <div class="card-harakaat-pair ar">
+            <span class="card-madi-form">${v.madi[0]}</span>
+            <span class="card-harakaat-sep">/</span>
+            <span class="card-mudari-form">${v.mudari[0]}</span>
+          </div>
+          <div class="card-root-small ar">${v.root}</div>
+          <div class="card-masdar-ar ar">${v.masdar}</div>
+          <div class="card-meaning bn">${v.meaning_bn}</div>
+          <div class="bab-pill">
+            <span class="bab-label">باب</span>
+            <span class="bab-pattern">${v.bab}</span>
+            <span class="bab-dot" style="background:${BAB_COLORS[v.bab_id]||'#fff'}"></span>
+          </div>
+        </div>
+        <div class="card-face card-back">
+          ${buildBackHTML(v)}
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="prevVerb()" ${currentVerbIdx===0?'disabled':''}>← আগে</button>
+      <button class="nav-btn primary" onclick="nextVerb()" ${currentVerbIdx===verbs.length-1?'disabled':''}>পরে →</button>
+    </div>
+    ${selfGrade}`;
+}
+
+function buildBackHTML(v) {
+  const row = (pr, form) =>
+    `<div class="conj-row"><span class="conj-pronoun ar">${pr}</span><span class="conj-form ar">${form}</span></div>`;
+
+  const section = (key) => {
+    const pr = PRONOUNS[key];
+    const forms = v[key];
+    return `<div class="conj-section">
+      <div class="conj-label">${SECTION_LABELS[key]}</div>
+      <div class="conj-grid">${pr.map((p,i)=>row(p,forms[i])).join('')}</div>
+    </div>`;
+  };
+
+  return `
+    <div class="card-back-title ar">${v.root} — ${v.meaning_bn}</div>
+    <div style="text-align:center;margin-bottom:8px">
+      <span style="font-family:var(--ar);font-size:0.85rem;direction:rtl;
+        background:${BAB_COLORS[v.bab_id]||'#888'}22;border-radius:10px;
+        padding:3px 10px;color:${BAB_COLORS[v.bab_id]||'#888'};font-weight:700">
+        باب: ${v.bab}
+      </span>
+    </div>
+    ${section('madi')}${section('mudari')}${section('amr')}${section('nahi')}
+    <div class="conj-masdar-row">
+      <span class="conj-label" style="margin:0">مصدر — মূল ক্রিয়া</span>
+      <span class="conj-form ar">${v.masdar}</span>
+    </div>
+    ${v.note_bn ? `<div class="note-box">⚠️ ${v.note_bn}</div>` : ''}`;
+}
+
+function flipCard() {
+  cardFlipped = !cardFlipped;
+  document.querySelector('.card-inner').classList.toggle('flipped', cardFlipped);
+  const h = document.querySelector('.flip-hint');
+  if (h) h.textContent = cardFlipped ? '👆 সামনের দিক দেখতে ট্যাপ করুন' : '👆 ২০টি রূপ দেখতে ট্যাপ করুন';
+}
+
+function prevVerb() { if (currentVerbIdx > 0) { currentVerbIdx--; cardFlipped=false; render(); } }
+function nextVerb() {
+  const v = getVerbs();
+  if (currentVerbIdx < v.length-1) { currentVerbIdx++; cardFlipped=false; render(); }
+}
+
+function selfGrade(knew) {
+  const v = getVerbs()[currentVerbIdx];
+  recordAnswer(v.root, knew);
+  updateHeaderStats();
+  renderDayTabs();
+  const verbs = getVerbs();
+  if (currentVerbIdx < verbs.length-1) { currentVerbIdx++; cardFlipped=false; }
+  else cardFlipped = false;
+  render();
+}
+
+// ── CHANT ──
+const PRONOUNS_BN = {
+  madi:   ['সে(পু)', 'সে(স্ত্রী)', 'তারা', 'তুমি', 'আমি', 'আমরা'],
+  mudari: ['সে(পু)', 'সে(স্ত্রী)', 'তারা', 'তুমি', 'আমি', 'আমরা'],
+  amr:    ['তুমি(পু)', 'তুমি(স্ত্রী)', 'তোমরা দুজন', 'তোমরা(পু)', 'তোমরা(স্ত্রী)'],
+  nahi:   ['তুমি(পু)', 'তোমরা(পু)'],
+};
+const CHANT_SECTION_LABELS = {
+  madi:   'ماضى — অতীত কাল',
+  mudari: 'مضارع — বর্তমান কাল',
+  amr:    'أمر — আদেশ',
+  nahi:   'نَهْي — নিষেধ',
+};
+
+function renderChant(main, verbs) {
+  if (!verbs.length) { main.innerHTML = '<div class="empty">এই দিনে কোনো ক্রিয়া নেই।</div>'; return; }
+  const v = verbs[currentVerbIdx];
+  const dots = verbs.map((_,i) =>
+    `<span class="dot${i===currentVerbIdx?' current':i<currentVerbIdx?' done':''}"></span>`
+  ).join('');
+
+  const SECTIONS = ['madi','mudari','amr','nahi'];
+  const sectionTabs = SECTIONS.map(s => `
+    <button class="chant-sec-btn${chantSection===s?' active-sec':''}" onclick="setChantSection('${s}')">
+      <span class="ar" style="font-size:0.9rem">${s==='madi'?'ماضى':s==='mudari'?'مضارع':s==='amr'?'أمر':'نَهْي'}</span>
+    </button>`).join('');
+
+  const sec = chantSection;
+  const forms = v[sec];
+  const pronounsAr = PRONOUNS[sec];
+  const pronounsBn = PRONOUNS_BN[sec];
+  const cols = (sec==='amr'||sec==='nahi') ? forms.length : 3;
+  const formCards = forms.map((form,i) => `
+    <div class="chant-form${chantIdx===i?' active':chantIdx>i?' done':''}" onclick="chantTap(${i})">
+      <span class="chant-form-word ar">${form}</span>
+      <span class="chant-form-bn">${pronounsBn[i]||''}</span>
+    </div>`).join('');
+
+  main.innerHTML = `
+    <div class="progress">
+      <span>${currentVerbIdx+1} / ${verbs.length}</span>
+      <div class="progress-dots">${dots}</div>
+      <span class="ar">${v.root}</span>
+    </div>
+    <div class="chant-card">
+      <div class="chant-root ar">${v.root}</div>
+      <div class="chant-meaning">${v.meaning_bn} &nbsp;|&nbsp; <span class="ar">${v.masdar}</span></div>
+      <div class="chant-sec-tabs">${sectionTabs}</div>
+      <div class="chant-label">${CHANT_SECTION_LABELS[sec]} — জোরে পড়ুন</div>
+      <div class="chant-forms" style="grid-template-columns:repeat(${cols},1fr)">${formCards}</div>
+      ${v.note_bn ? `<div class="note-box">⚠️ ${v.note_bn}</div>` : ''}
+    </div>
+    <div class="chant-controls">
+      <button class="chant-btn" onclick="prevVerb()">← আগে</button>
+      <button class="chant-btn${chantActive?' active-btn':''}" onclick="toggleChant()">
+        ${chantActive ? '⏹ থামুন' : '▶ স্বয়ংক্রিয়'}
+      </button>
+      <button class="chant-btn" onclick="nextVerb()">পরে →</button>
+    </div>
+    <div class="speed-row">
+      গতি:
+      <button class="speed-btn" onclick="setSpeed(1300)">ধীর</button>
+      <button class="speed-btn" onclick="setSpeed(850)">স্বাভাবিক</button>
+      <button class="speed-btn" onclick="setSpeed(500)">দ্রুত</button>
+    </div>`;
+}
+
+function setChantSection(s) { chantSection = s; stopChant(); render(); }
+function chantTap(i) { stopChant(); chantIdx = i; render(); }
+
+function toggleChant() {
+  if (chantActive) { stopChant(); render(); return; }
+  chantActive = true; chantIdx = -1; runChant();
+}
+
+function runChant() {
+  if (!chantActive) return;
+  const v = getVerbs()[currentVerbIdx];
+  const forms = v[chantSection];
+  chantIdx++;
+  if (chantIdx >= forms.length) { chantIdx = -1; render(); chantTimer = setTimeout(runChant, chantSpeed*2); return; }
+  render(); chantTimer = setTimeout(runChant, chantSpeed);
+}
+
+function stopChant() {
+  chantActive=false; chantIdx=-1;
+  if (chantTimer) { clearTimeout(chantTimer); chantTimer=null; }
+}
+
+function setSpeed(ms) { chantSpeed = ms; }
+
+// ── QUIZ ──
+const QUIZ_CATS = [
+  {name_ar:'ماضى',   name_bn:'অতীত কাল',   key:'madi',   pronouns_key:'madi'},
+  {name_ar:'مضارع',  name_bn:'বর্তমান কাল', key:'mudari', pronouns_key:'mudari'},
+  {name_ar:'أمر',    name_bn:'আদেশ',         key:'amr',    pronouns_key:'amr'},
+  {name_ar:'نَهْي',  name_bn:'নিষেধ',        key:'nahi',   pronouns_key:'nahi'},
+];
+
+function startQuiz() { quizIdx=0; quizScore=0; quizAnswered=false; quizQ=null; }
+
+function generateQuestion(verbs) {
+  if (!verbs.length) return null;
+  const verb  = verbs[Math.floor(Math.random()*verbs.length)];
+  const cat   = QUIZ_CATS[Math.floor(Math.random()*QUIZ_CATS.length)];
+  const forms = verb[cat.key];
+  const idx   = Math.floor(Math.random()*forms.length);
+  const correct = forms[idx];
+  const pronoun    = PRONOUNS[cat.pronouns_key][idx];
+  const pronoun_bn = (PRONOUNS_BN[cat.pronouns_key]||[])[idx] || '';
+
+  // Distractors: same verb, different tense OR same tense, different person
+  const wrongPool = new Set();
+  // same verb, other tenses
+  for (const c of QUIZ_CATS) {
+    if (c.key === cat.key) continue;
+    for (const f of verb[c.key]) { if (f && f !== correct) wrongPool.add(f); }
+  }
+  // same verb, same tense, other persons
+  for (const f of forms) { if (f && f !== correct) wrongPool.add(f); }
+  // fallback: other verbs, same position
+  if (wrongPool.size < 3) {
+    for (const v of verbs) {
+      if (v === verb) continue;
+      const f = v[cat.key][idx];
+      if (f && f !== correct) wrongPool.add(f);
+    }
+  }
+  const wrongs = shuffle([...wrongPool]).slice(0,3);
+  while (wrongs.length < 3) wrongs.push('—');
+
+  return { verb, cat, pronoun, pronoun_bn, correct, options: shuffle([correct,...wrongs]) };
+}
+
+function renderQuiz(main, verbs) {
+  if (!verbs.length) { main.innerHTML = '<div class="empty">এই দিনে কোনো ক্রিয়া নেই।</div>'; return; }
+  if (!quizQ) quizQ = generateQuestion(verbs);
+  if (quizIdx >= quizTotal) { renderResult(main); return; }
+
+  const pct = Math.round((quizIdx/quizTotal)*100);
+  const q = quizQ;
+  const opts = q.options.map(o =>
+    `<button class="option-btn" onclick="answerQuiz('${o.replace(/'/g,"\\'")}',this)">${o}</button>`
+  ).join('');
+
+  main.innerHTML = `
+    <div class="quiz-header">
+      <span class="quiz-score">✓ ${quizScore} / ${quizIdx}</span>
+      <span class="quiz-qnum">প্রশ্ন ${quizIdx+1} / ${quizTotal}</span>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-card">
+      <div class="quiz-verb ar">${q.verb.root}</div>
+      <div class="quiz-verb-bn">${q.verb.meaning_bn}</div>
+      <div class="quiz-divider"></div>
+      <div class="quiz-q-label">${q.cat.name_bn} (${q.cat.name_ar}) — কার রূপ?</div>
+      <div class="quiz-pronoun bn">${q.pronoun_bn}</div>
+      <div class="quiz-pronoun-ar ar">${q.pronoun}</div>
+    </div>
+    <div class="quiz-options">${opts}</div>
+    <div class="quiz-feedback" id="qfb"></div>
+    <button class="nav-btn primary" id="qnext" style="display:none;width:100%" onclick="nextQuestion()">পরের প্রশ্ন →</button>`;
+}
+
+function answerQuiz(chosen, btn) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const isCorrect = chosen === quizQ.correct;
+  if (isCorrect) quizScore++;
+  recordAnswer(quizQ.verb.root, isCorrect);
+  updateHeaderStats();
+  renderDayTabs();
+  document.querySelectorAll('.option-btn').forEach(b => {
+    b.disabled = true;
+    const t = b.textContent.trim();
+    if (t === quizQ.correct) b.classList.add('correct');
+    else if (t === chosen && !isCorrect) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('qfb');
+  fb.className = 'quiz-feedback ' + (isCorrect?'correct':'wrong');
+  fb.textContent = isCorrect ? '✓ সঠিক!' : `✗ সঠিক উত্তর: ${quizQ.correct}`;
+  document.getElementById('qnext').style.display = 'block';
+}
+
+function nextQuestion() {
+  quizIdx++; quizAnswered = false;
+  quizQ = generateQuestion(getVerbs()); render();
+}
+
+function renderResult(main) {
+  const pct = Math.round((quizScore/quizTotal)*100);
+  const emoji = pct>=90?'🏆':pct>=70?'⭐':pct>=50?'📚':'💪';
+  const msg = pct>=90?'চমৎকার! আপনি এই ক্রিয়াগুলো আয়ত্ত করেছেন!':
+              pct>=70?'খুব ভালো — আরও একটু অনুশীলন করুন!':
+              pct>=50?'চেষ্টা চালিয়ে যান — রূপগুলো আবার পড়ুন।':
+              'পড়াশোনা করুন — আপনি পারবেন!';
+  main.innerHTML = `
+    <div class="result-screen">
+      <div class="result-emoji">${emoji}</div>
+      <div class="result-score">${quizScore} / ${quizTotal}</div>
+      <div class="result-pct">${pct}%</div>
+      <div class="result-msg">${msg}</div>
+      <button class="result-btn" onclick="startQuiz();render()">আবার চেষ্টা করুন</button>
+      <button class="result-btn" style="margin-top:10px;background:#fff;color:var(--green);border:2px solid var(--green)"
+        onclick="setMode('progress')">📊 অগ্রগতি দেখুন</button>
+    </div>`;
+}
+
+// ── PROGRESS SCREEN ──
+function renderProgress(main) {
+  const mastered = VERBS.filter(v => getMastery(v.root) === 'mastered').length;
+  const learning = VERBS.filter(v => getMastery(v.root) === 'learning').length;
+  const total    = Object.values(progress.verbs).reduce((s,v) => s + v.correct + v.wrong, 0);
+
+  const verbRows = VERBS.map(v => {
+    const vp = progress.verbs[v.root] || { correct:0, wrong:0, lastSeen:'' };
+    return `<div class="prog-verb-row">
+      <div class="prog-mastery-icon">${masteryIcon(v.root)}</div>
+      <div class="prog-verb-root ar">${v.root}</div>
+      <div class="prog-verb-info">
+        <div class="prog-verb-meaning">${v.meaning_bn}</div>
+        <div class="prog-verb-stats">
+          <span class="stat-c">✓ ${vp.correct}</span>&nbsp;&nbsp;
+          <span class="stat-w">✗ ${vp.wrong}</span>
+          ${vp.lastSeen ? `&nbsp;<span class="prog-last">${vp.lastSeen}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  main.innerHTML = `
+    <div class="prog-stats">
+      <div class="prog-stat">
+        <div class="prog-stat-val">${mastered}</div>
+        <div class="prog-stat-lbl">আয়ত্ত 🟢</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${learning}</div>
+        <div class="prog-stat-lbl">শেখা হচ্ছে 🟡</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${progress.streak.count || 0}</div>
+        <div class="prog-stat-lbl">দিনের ধারা 🔥</div>
+      </div>
+    </div>
+    <div class="prog-section-title">সকল ১৬টি ক্রিয়া · মোট ${total} উত্তর</div>
+    <div class="prog-verb-list">${verbRows}</div>
+    <button class="reset-btn" onclick="resetProgress()">🗑 সকল অগ্রগতি মুছুন</button>`;
+}
+
+function resetProgress() {
+  if (!confirm('সব অগ্রগতি মুছে ফেলবেন?\nএটি পূর্বাবস্থায় ফেরানো যাবে না।')) return;
+  progress = { streak:{ lastDate:'', count:0 }, verbs:{} };
+  saveProgress();
+  updateHeaderStats();
+  renderDayTabs();
+  render();
+}
+
+// ── start ──
+init();
+</script>
+</body>
+</html>
