@@ -699,7 +699,7 @@ function nextChantZoom() {
 function onZoomTouchStart(e) { zoomTouchStartX = e.changedTouches?.[0]?.clientX ?? null; }
 function onZoomTouchEnd(e) {
   const endX = e.changedTouches?.[0]?.clientX ?? null;
-  if (zoomTouchStartX == null || endX == null) return;
+  if (zoomTouchStartX === null || endX === null) return;
   const delta = endX - zoomTouchStartX;
   zoomTouchStartX = null;
   if (delta <= -40) nextChantZoom();
