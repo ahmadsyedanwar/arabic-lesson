@@ -1,8 +1,17 @@
 # Arabic Verb Study App
 
-A mobile-friendly single-page web app for studying Arabic verb conjugations, built for Bengali speakers.
+A mobile-friendly single-page web app for studying Arabic verb conjugations, built for Bengali speakers. 🇸🇦 🇧🇩
 
 **Live:** [arabic.ahmadsyed.net](https://arabic.ahmadsyed.net)
+
+---
+
+## Quick Start
+
+1. **No installation needed** — just open `index.html` in any browser
+2. Select a day (1-4) to filter verbs
+3. Choose a study mode (ফ্ল্যাশকার্ড, আবৃত্তি, কুইজ, or অগ্রগতি)
+4. Track your progress automatically (stored in browser)
 
 ---
 
@@ -22,8 +31,10 @@ A mobile-friendly single-page web app for studying Arabic verb conjugations, bui
 
 **কুইজ (Quiz)**
 - 10-question MCQ per session covering all 4 tense categories including نَهْي
-- Distractors drawn from the **same verb** (different tense or person) — not random other verbs
+- Distractors drawn from the **same verb** (different tense or person) and other verbs for better learning
 - Pronouns displayed in Bengali (আমি, তুমি, তারা…) with Arabic shown as secondary
+- Instant feedback with correct answer revealed
+- Question bank dynamically generated from all verbs or filtered by day
 
 **অগ্রগতি (Progress)**
 - Per-verb mastery tracking: 🔴 new → 🟡 learning → 🟢 mastered (≥3 correct, <30% error rate)
@@ -42,16 +53,28 @@ A mobile-friendly single-page web app for studying Arabic verb conjugations, bui
 
 ```
 arabic/
-├── index.html      # Single-file app (HTML + CSS + JS)
-├── verbs.json      # All verb and harakat data (source of truth)
-└── README.md
+├── index.html        # Single-file app (HTML + CSS + JS, ~940 lines)
+├── verbs.json        # All verb, pronoun, and harakat data (source of truth)
+├── server.py         # Optional: Python development server
+└── README.md         # This file
 ```
 
 ### `verbs.json` schema
 
+Top-level blocks:
+
 ```json
 {
-  "pronouns": { "madi": [...], "mudari": [...], "amr": [...], "nahi": [...] },
+  "pronouns": {
+    "madi": ["هو", "هي", "هم", "أنتَ", "أنا", "نحن"],
+    "mudari": ["هو", "هي", "هم", "أنتَ", "أنا", "نحن"],
+    "amr": ["أنتَ", "أنتِ", "أنتما", "أنتم", "أنتن"],
+    "nahi": ["أنتَ", "أنتم"]
+  },
+  "harakaat": [
+    { "on_ba": "َ", "name_ar": "فتحة", "name_bn": "ফতহা", "color": "#e91e63", "sound": "a", "sound_latin": "fatha" },
+    ...
+  ],
   "verbs": [
     {
       "day": 1,
@@ -69,6 +92,15 @@ arabic/
   ]
 }
 ```
+
+**Data blocks used by each feature:**
+
+| Feature | `pronouns` | `verbs` | `harakaat` |
+|---------|-----------|--------|-----------|
+| ফ্ল্যাশকার্ড | ✗ | ✅ | ✅ (reference) |
+| আবৃত্তি | ✅ | ✅ | ✗ |
+| কুইজ | ✅ | ✅ | ✗ |
+| অগ্রগতি | ✗ | ✅ | ✗ |
 
 **`bab_id` values:** `aa` (fatha/fatha) · `ai` (fatha/kasra) · `au` (fatha/damma) · `ia` (kasra/fatha)
 
@@ -112,6 +144,58 @@ All progress is stored in `localStorage` under the key `arabic_study_progress`. 
 
 ## Tech Stack
 
-- Vanilla HTML/CSS/JS — no build tools, no framework
-- Fonts: [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic) · [Hind Siliguri](https://fonts.google.com/specimen/Hind+Siliguri)
-- Data served as static JSON by nginx
+- **No build tools, no framework** — vanilla HTML/CSS/JavaScript
+- **Single-file app** — all code in `index.html` (~940 lines)
+- **Zero dependencies** — works offline, works everywhere
+- **Fonts:** [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic) · [Hind Siliguri](https://fonts.google.com/specimen/Hind+Siliguri) (Google Fonts CDN)
+- **Data:** Static JSON file, cached for 7 days
+
+---
+
+## Development
+
+### Local Testing
+
+```bash
+# Option 1: Python dev server
+python3 server.py
+# Then visit http://localhost:8000
+
+# Option 2: Any static server
+npx http-server
+
+# Option 3: Open directly in browser (works offline!)
+open index.html
+```
+
+### Adding Verbs
+
+Edit `verbs.json` and add a new entry to the `verbs` array:
+
+```json
+{
+  "day": 1,
+  "root": "فعل",
+  "masdar": "فِعل",
+  "meaning_bn": "বাংলা অর্থ",
+  "bab": "فَعَلَ / يَفْعَلُ",
+  "bab_id": "aa",
+  "madi": ["...", "..."],
+  "mudari": ["...", "..."],
+  "amr": ["...", "..."],
+  "nahi": ["...", "..."],
+  "note_bn": "Optional Bengali note"
+}
+```
+
+The app automatically picks up changes on next page load (cache expires in 7 days).
+
+### Editing Harakat
+
+To modify Arabic diacritical marks (harakat), edit the `harakaat` array in `verbs.json`. Each entry needs:
+- `on_ba` — the symbol itself
+- `name_ar` — Arabic name
+- `name_bn` — Bengali name  
+- `color` — hex color for the study card
+- `sound` — phonetic sound
+- `sound_latin` — romanization
