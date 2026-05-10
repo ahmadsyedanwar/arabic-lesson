@@ -135,7 +135,7 @@ main{padding:14px;padding-bottom:80px}
   background:#f5f5f5;cursor:pointer;transition:all .2s;font-size:0.9rem}
 .chant-sec-btn.active-sec{background:var(--green);border-color:var(--green);color:#fff}
 .word-zoom-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}
-.word-zoom-modal{width:min(420px,100%);background:#fff;border-radius:18px;padding:20px 16px 14px;position:relative;text-align:center;touch-action:pan-y}
+.word-zoom-modal{width:min(420px,100%);background:#fff;border-radius:18px;padding:20px 16px 14px;position:relative;text-align:center;touch-action:none}
 .word-zoom-close{position:absolute;top:8px;right:10px;border:none;background:none;font-size:1.4rem;line-height:1;cursor:pointer;color:#777}
 .word-zoom-word{font-family:var(--ar);font-size:6rem;font-weight:700;line-height:1.15;direction:rtl;color:var(--green);margin-top:8px}
 .word-zoom-pronoun{font-family:var(--bn);font-size:.95rem;color:var(--muted);margin-top:8px}
@@ -699,7 +699,7 @@ function openChantZoom(i) {
   setTimeout(() => document.querySelector('.word-zoom-modal')?.focus(), 0);
 }
 function closeChantZoom() { chantZoomOpen = false; render(); }
-function wrapIndex(current, delta, length) { return (current + delta + length) % length; }
+function wrapIndex(current, delta, length) { return (current + delta + length) % length; } // +length keeps negative deltas in range
 function prevChantZoom() {
   const forms = getVerbs()[currentVerbIdx][chantSection];
   chantZoomIdx = wrapIndex(chantZoomIdx, -1, forms.length);
@@ -725,8 +725,8 @@ function onZoomTouchEnd(e) {
       break;
     }
   }
-  const endX = touch ? touch.clientX : null;
-  if (zoomTouch.x === null || endX === null) return;
+  if (!touch || zoomTouch.x === null) return;
+  const endX = touch.clientX;
   const delta = endX - zoomTouch.x;
   zoomTouch = { id:null, x:null };
   if (delta <= -SWIPE_THRESHOLD_PX) nextChantZoom();
