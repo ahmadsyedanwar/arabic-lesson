@@ -142,6 +142,7 @@ main{padding:14px;padding-bottom:80px}
 .word-zoom-nav{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .word-zoom-nav-btn{border:2px solid var(--border);background:#fff;border-radius:10px;padding:8px 14px;font-family:var(--bn);font-size:.85rem;cursor:pointer}
 .word-zoom-swipe-hint{font-family:var(--bn);font-size:.72rem;color:var(--muted);margin-top:8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ── QUIZ ── */
 .quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -311,6 +312,7 @@ main{padding:14px;padding-bottom:80px}
 
 // ── globals ──
 let VERBS = [], PRONOUNS = {};
+const SWIPE_THRESHOLD_PX = 40;
 
 // bab pattern → color mapping (fatha=orange, kasra=blue, damma=green, mixed)
 const BAB_COLORS = {
@@ -638,13 +640,14 @@ function renderChant(main, verbs) {
   const zoomPronounBn = pronounsBn[chantZoomIdx] || '';
   const zoomOverlay = chantZoomOpen ? `
     <div class="word-zoom-overlay" onclick="closeChantZoom()">
-      <div class="word-zoom-modal" onclick="event.stopPropagation()" ontouchstart="onZoomTouchStart(event)" ontouchend="onZoomTouchEnd(event)">
+      <div class="word-zoom-modal" role="dialog" aria-modal="true" aria-labelledby="wordZoomTitle" onclick="event.stopPropagation()" ontouchstart="onZoomTouchStart(event)" ontouchend="onZoomTouchEnd(event)">
+        <h2 id="wordZoomTitle" class="sr-only">Verb Form Details</h2>
         <button class="word-zoom-close" onclick="closeChantZoom()" aria-label="close">✕</button>
         <div class="word-zoom-word ar">${zoomWord}</div>
         <div class="word-zoom-pronoun bn">${zoomPronounBn}</div>
         <div class="word-zoom-nav">
-          <button class="word-zoom-nav-btn" onclick="prevChantZoom()">← আগে</button>
-          <button class="word-zoom-nav-btn" onclick="nextChantZoom()">পরে →</button>
+          <button class="word-zoom-nav-btn" onclick="prevChantZoom()" aria-label="Previous verb form">← আগে</button>
+          <button class="word-zoom-nav-btn" onclick="nextChantZoom()" aria-label="Next verb form">পরে →</button>
         </div>
         <div class="word-zoom-swipe-hint">⬅️ ডানে/বামে সোয়াইপ করুন</div>
       </div>
@@ -702,8 +705,8 @@ function onZoomTouchEnd(e) {
   if (zoomTouchStartX === null || endX === null) return;
   const delta = endX - zoomTouchStartX;
   zoomTouchStartX = null;
-  if (delta <= -40) nextChantZoom();
-  else if (delta >= 40) prevChantZoom();
+  if (delta <= -SWIPE_THRESHOLD_PX) nextChantZoom();
+  else if (delta >= SWIPE_THRESHOLD_PX) prevChantZoom();
 }
 
 function toggleChant() {
