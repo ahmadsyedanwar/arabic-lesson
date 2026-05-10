@@ -374,6 +374,50 @@ function shuffle(a) {
   return b;
 }
 
+const DISPLAY_PRONOUNS_AR = {
+  madi:   ['هو', 'هي', 'أنتَ', 'أنا', 'هن', 'هم', 'أنتن', 'أنتم', 'نحن'],
+  mudari: ['هو', 'هي', 'أنتَ', 'أنا', 'هن', 'هم', 'أنتن', 'أنتم', 'نحن'],
+  amr:    ['أنتَ', 'أنتِ', 'أنتما', 'أنتم', 'أنتن'],
+  nahi:   ['أنتَ', 'أنتم'],
+};
+
+const PRONOUNS_BN_BY_AR = {
+  madi: {
+    'هو': 'সে(পু)', 'هي': 'সে(স্ত্রী)', 'أنتَ': 'তুমি(পু)', 'أنا': 'আমি',
+    'هن': 'তারা(স্ত্রী)', 'هم': 'তারা(পু)', 'أنتن': 'তোমরা(স্ত্রী)',
+    'أنتم': 'তোমরা(পু)', 'نحن': 'আমরা'
+  },
+  mudari: {
+    'هو': 'সে(পু)', 'هي': 'সে(স্ত্রী)', 'أنتَ': 'তুমি(পু)', 'أنا': 'আমি',
+    'هن': 'তারা(স্ত্রী)', 'هم': 'তারা(পু)', 'أنتن': 'তোমরা(স্ত্রী)',
+    'أنتم': 'তোমরা(পু)', 'نحن': 'আমরা'
+  },
+  amr: {
+    'أنتَ': 'তুমি(পু)', 'أنتِ': 'তুমি(স্ত্রী)', 'أنتما': 'তোমরা দুজন',
+    'أنتم': 'তোমরা(পু)', 'أنتن': 'তোমরা(স্ত্রী)'
+  },
+  nahi: {
+    'أنتَ': 'তুমি(পু)', 'أنتم': 'তোমরা(পু)'
+  },
+};
+
+function getSectionRows(v, key) {
+  const srcPronouns = Array.isArray(PRONOUNS[key]) ? PRONOUNS[key] : [];
+  const srcForms = Array.isArray(v[key]) ? v[key] : [];
+  const targetPronouns = DISPLAY_PRONOUNS_AR[key] || srcPronouns;
+  const byPronoun = new Map();
+  srcPronouns.forEach((p, i) => byPronoun.set(p, srcForms[i]));
+  const forms = targetPronouns.map((p, i) => byPronoun.get(p) ?? srcForms[i] ?? '');
+  return { pronouns: targetPronouns, forms };
+}
+
+function toPronounBn(section, pronounAr, fallbackIdx = -1) {
+  const mapped = (PRONOUNS_BN_BY_AR[section] || {})[pronounAr];
+  if (mapped) return mapped;
+  const arr = PRONOUNS_BN[section] || [];
+  return fallbackIdx >= 0 ? (arr[fallbackIdx] || '') : '';
+}
+
 // ── PROGRESS TRACKING ──
 const PROGRESS_KEY = 'arabic_study_progress';
 let progress = { streak:{ lastDate:'', count:0 }, verbs:{} };
@@ -552,11 +596,10 @@ function renderFlashcard(main, verbs) {
 
 function buildBackHTML(v) {
   const row = (pr, form) =>
-    `<div class="conj-row"><span class="conj-pronoun ar">${pr}</span><span class="conj-form ar">${form}</span></div>`;
+    `<div class="conj-row"><span class="conj-pronoun ar">${pr}</span><span class="conj-form ar">${form || '—'}</span></div>`;
 
   const section = (key) => {
-    const pr = PRONOUNS[key];
-    const forms = v[key];
+    const { pronouns: pr, forms } = getSectionRows(v, key);
     return `<div class="conj-section">
       <div class="conj-label">${SECTION_LABELS[key]}</div>
       <div class="conj-grid">${pr.map((p,i)=>row(p,forms[i])).join('')}</div>
@@ -632,16 +675,15 @@ function renderChant(main, verbs) {
     </button>`).join('');
 
   const sec = chantSection;
-  const forms = v[sec];
-  const pronounsAr = PRONOUNS[sec];
-  const pronounsBn = PRONOUNS_BN[sec];
+  const { pronouns: pronounsAr, forms } = getSectionRows(v, sec);
+  const pronounsBn = pronounsAr.map((p, i) => toPronounBn(sec, p, i));
   const cols = (sec==='amr'||sec==='nahi') ? forms.length : 3;
   const formCards = forms.map((form,i) => `
     <div class="chant-form${chantIdx===i?' active':chantIdx>i?' done':''}" onclick="openChantZoom(${i})">
-      <span class="chant-form-word ar">${form}</span>
+      <span class="chant-form-word ar">${form || '—'}</span>
       <span class="chant-form-bn">${pronounsBn[i]||''}</span>
     </div>`).join('');
-  const zoomWord = forms[chantZoomIdx] || '';
+  const zoomWord = forms[chantZoomIdx] || '—';
   const zoomPronounBn = pronounsBn[chantZoomIdx] || '';
   const zoomOverlay = chantZoomOpen ? `
     <div class="word-zoom-overlay" onclick="closeChantZoom()">
@@ -701,13 +743,13 @@ function openChantZoom(i) {
 function closeChantZoom() { chantZoomOpen = false; render(); }
 function wrapIndex(current, delta, length) { return (current + delta + length) % length; } // +length keeps negative deltas in range
 function prevChantZoom() {
-  const forms = getVerbs()[currentVerbIdx][chantSection];
+  const forms = getSectionRows(getVerbs()[currentVerbIdx], chantSection).forms;
   chantZoomIdx = wrapIndex(chantZoomIdx, -1, forms.length);
   chantIdx = chantZoomIdx;
   render();
 }
 function nextChantZoom() {
-  const forms = getVerbs()[currentVerbIdx][chantSection];
+  const forms = getSectionRows(getVerbs()[currentVerbIdx], chantSection).forms;
   chantZoomIdx = wrapIndex(chantZoomIdx, 1, forms.length);
   chantIdx = chantZoomIdx;
   render();
@@ -753,7 +795,7 @@ function toggleChant() {
 function runChant() {
   if (!chantActive) return;
   const v = getVerbs()[currentVerbIdx];
-  const forms = v[chantSection];
+  const forms = getSectionRows(v, chantSection).forms;
   chantIdx++;
   if (chantIdx >= forms.length) { chantIdx = -1; render(); chantTimer = setTimeout(runChant, chantSpeed*2); return; }
   render(); chantTimer = setTimeout(runChant, chantSpeed);
@@ -784,7 +826,7 @@ function generateQuestion(verbs) {
   const idx   = Math.floor(Math.random()*forms.length);
   const correct = forms[idx];
   const pronoun    = PRONOUNS[cat.pronouns_key][idx];
-  const pronoun_bn = (PRONOUNS_BN[cat.pronouns_key]||[])[idx] || '';
+  const pronoun_bn = toPronounBn(cat.pronouns_key, pronoun, idx);
 
   // Distractors: same verb, different tense OR same tense, different person
   const wrongPool = new Set();
